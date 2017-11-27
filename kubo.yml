@@ -11,9 +11,9 @@ releases:
 - name: kubo
   version: latest
 - name: docker
-  version: 28.0.1
-  url: https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v=28.0.1
-  sha1: 448eaa2f478dc8794933781b478fae02aa44ed6b
+  version: 30.1.4
+  url: https://github.com/cloudfoundry-community/docker-boshrelease/releases/download/v30.1.4/docker-30.1.4.tgz
+  sha1: f79a70452b3ddae52f5ac78dd37ff8d9e6ec19e2
 stemcells:
 - alias: trusty
   os: ubuntu-trusty
@@ -56,6 +56,8 @@ instance_groups:
       admin-username: admin
       admin-password: ((kubo-admin-password))
       kubelet-password: ((kubelet-password))
+      kube-proxy-password: "((kube-proxy-password))"
+      kube-scheduler-password: "((kube-scheduler-password))"
       backend_port: 8443 # Bosh links hack
       port: 8443
       authorization-mode: &authorization_mode rbac
@@ -65,6 +67,8 @@ instance_groups:
     release: kubo
     properties:
       kubelet-password: ((kubelet-password))
+      kube-proxy-password: "((kube-proxy-password))"
+      kube-scheduler-password: "((kube-scheduler-password))"
       tls:
         kubernetes: ((tls-kubernetes))
   - name: kubernetes-controller-manager
@@ -94,18 +98,20 @@ instance_groups:
   - name: docker
     release: docker
     properties:
-      docker:
-        flannel: true
-        iptables: false
-        ip_masq: false
-        log_level: error
-        storage_driver: overlay
-        default_ulimits: [ "nofile=65536" ]
+      bip: 172.17.0.1/24
+      default_ulimits: [ "nofile=65536" ]
+      flannel: true
+      ip_masq: false
+      iptables: false
+      log_level: error
+      storage_driver: overlay
       env: {}
   - name: kubeconfig
     release: kubo
     properties:
       kubernetes-api-url: "https://((kubernetes_master_host)):8443"
+      kube-proxy-password: "((kube-proxy-password))"
+      kube-scheduler-password: "((kube-scheduler-password))"
       kubelet-password: ((kubelet-password))
       tls:
         kubernetes: ((tls-kubernetes))
@@ -161,3 +167,7 @@ variables:
     - kubernetes.default.svc
     - kubernetes.default.svc.cluster.local
     - master.kubo
+- name: kube-proxy-password
+  type: password
+- name: kube-scheduler-password
+  type: password
